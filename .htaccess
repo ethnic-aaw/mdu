@@ -1,0 +1,10 @@
+# Harden
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set X-Content-Type-Options "nosniff"
+# Allow CORS for same-origin; block .db direct
+<FilesMatch "\.db$">
+  Require all denied
+</FilesMatch>
+RewriteEngine On
+# admin without slash -> admin/
+RewriteRule ^admin$ admin/ [R=301,L]
