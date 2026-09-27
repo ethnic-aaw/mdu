@@ -16,7 +16,7 @@ function normalizeStats(stats){
   if(!Array.isArray(stats)) return Store.defaults.site.stats;
   return stats.map(s=> s.v!==undefined ? s : {v:s['v']||s[Object.keys(s)[0]], l:s['l']||s[Object.keys(s)[1]]||''});
 }
-let testiTimer, testiIdx=0; let _beritaCache=[];
+let testiTimer, testiIdx=0; let _beritaCache=(typeof Store!=='undefined'? Store.defaults.berita.slice():[]);
 function renderFromData(d){
   // hero — sanitize: allow only span/br/em in title
   const hTitle=document.querySelector('.hero-content h1'); if(hTitle){
