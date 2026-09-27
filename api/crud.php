@@ -1,7 +1,7 @@
 <?php
 require __DIR__.'/config.php';
 $allowed = [
-  'berita'    => ['judul','excerpt','img','tgl','tag','tagClass'],
+  'berita'    => ['judul','excerpt','konten','img','tgl','tag','tagClass'],
   'program'   => ['icon','judul','desc','feat'],
   'fasilitas' => ['judul','desc','img','icon','wide'],
   'ekskul'    => ['judul','desc','icon','color'],
@@ -36,6 +36,13 @@ if($method==='POST'){
   // validate required field present
   $need = in_array($table,['testimoni']) ? 'nama' : 'judul';
   if(empty(trim($filtered[$need]??''))) json(['error'=>"$need wajib"],422);
+  // berita: tag allowlist + auto tagClass
+  if($table==='berita'){
+    $map=['Kegiatan'=>'','Prestasi'=>'gold','Pengumuman'=>'green'];
+    if(isset($filtered['tag']) && !isset($map[$filtered['tag']])) json(['error'=>'Tag tidak valid'],422);
+    if(isset($filtered['tag'])) $filtered['tagClass']=$map[$filtered['tag']];
+    if(isset($filtered['konten'])) $filtered['konten']=mb_substr(trim($filtered['konten']),0,20000);
+  }
   // validate kat / color / url bounds
   if(isset($filtered['kat']) && !in_array($filtered['kat'],['akademik','seni','olahraga'])) json(['error'=>'Kategori tidak valid'],422);
   if(isset($filtered['color']) && !preg_match('/^#[0-9a-fA-F]{6}$/',$filtered['color'])) $filtered['color']='#0F5132';
@@ -56,6 +63,12 @@ if($method==='PUT' || $method==='PATCH'){
   if(!$id) json(['error'=>'id required'],400);
   $filtered=filterBody($b,$colsAllowed);
   if(!$filtered) json(['error'=>'Nothing to update'],400);
+  if($table==='berita'){
+    $map=['Kegiatan'=>'','Prestasi'=>'gold','Pengumuman'=>'green'];
+    if(isset($filtered['tag']) && !isset($map[$filtered['tag']])) json(['error'=>'Tag tidak valid'],422);
+    if(isset($filtered['tag'])) $filtered['tagClass']=$map[$filtered['tag']];
+    if(isset($filtered['konten'])) $filtered['konten']=mb_substr(trim($filtered['konten']),0,20000);
+  }
   if(isset($filtered['kat']) && !in_array($filtered['kat'],['akademik','seni','olahraga'])) json(['error'=>'Kategori tidak valid'],422);
   if(isset($filtered['color']) && !preg_match('/^#[0-9a-fA-F]{6}$/',$filtered['color'])) $filtered['color']='#0F5132';
   if(isset($filtered['icon'])) $filtered['icon']=preg_replace('/[^a-z0-9-]/','', $filtered['icon']);

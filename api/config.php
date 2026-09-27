@@ -58,13 +58,19 @@ function initDB(){
   $pdo=getPDO();
   $pdo->exec("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, nama TEXT, pass TEXT NOT NULL, role TEXT NOT NULL)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS site (id INTEGER PRIMARY KEY CHECK(id=1), data TEXT NOT NULL)");
-  $pdo->exec("CREATE TABLE IF NOT EXISTS berita (id TEXT PRIMARY KEY, judul TEXT, excerpt TEXT, img TEXT, tgl TEXT, tag TEXT, tagClass TEXT)");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS berita (id TEXT PRIMARY KEY, judul TEXT, excerpt TEXT, konten TEXT, img TEXT, tgl TEXT, tag TEXT, tagClass TEXT)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS program (id TEXT PRIMARY KEY, icon TEXT, judul TEXT, desc TEXT, feat TEXT)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS fasilitas (id TEXT PRIMARY KEY, judul TEXT, desc TEXT, img TEXT, icon TEXT, wide TEXT)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS ekskul (id TEXT PRIMARY KEY, judul TEXT, desc TEXT, icon TEXT, color TEXT)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS prestasi (id TEXT PRIMARY KEY, judul TEXT, level TEXT, lokasi TEXT, kat TEXT, img TEXT)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS testimoni (id TEXT PRIMARY KEY, nama TEXT, peran TEXT, foto TEXT, teks TEXT)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS inbox (id TEXT PRIMARY KEY, nama TEXT, kontak TEXT, subjek TEXT, pesan TEXT, tgl TEXT, is_read INTEGER DEFAULT 0)");
+  // migrate berita.konten if missing (existing DB)
+  try{
+    $cols=$pdo->query("PRAGMA table_info(berita)")->fetchAll(PDO::FETCH_ASSOC);
+    $hasKonten=false; foreach($cols as $c){ if($c['name']==='konten') $hasKonten=true; }
+    if(!$hasKonten) $pdo->exec("ALTER TABLE berita ADD COLUMN konten TEXT DEFAULT ''");
+  }catch(Exception $e){}
   // migrate legacy `read` column -> is_read if exists
   try{
     $cols=$pdo->query("PRAGMA table_info(inbox)")->fetchAll(PDO::FETCH_ASSOC);

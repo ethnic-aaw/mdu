@@ -16,7 +16,7 @@ function normalizeStats(stats){
   if(!Array.isArray(stats)) return Store.defaults.site.stats;
   return stats.map(s=> s.v!==undefined ? s : {v:s['v']||s[Object.keys(s)[0]], l:s['l']||s[Object.keys(s)[1]]||''});
 }
-let testiTimer, testiIdx=0;
+let testiTimer, testiIdx=0; let _beritaCache=[];
 function renderFromData(d){
   // hero — sanitize: allow only span/br/em in title
   const hTitle=document.querySelector('.hero-content h1'); if(hTitle){
@@ -46,12 +46,13 @@ function renderFromData(d){
   if(infoPs[0]) infoPs[0].textContent=d.site.kontak.alamat;
   if(infoPs[1]) infoPs[1].innerHTML=`<a href="tel:${(d.site.kontak.tel||'').replace(/[^0-9+]/g,'')}">${esc(d.site.kontak.tel)}</a> • <a href="https://wa.me/${(d.site.kontak.tel||'').replace(/[^0-9]/g,'')}" target="_blank">Chat WA</a>`;
   if(infoPs[2]) infoPs[2].innerHTML=`<a href="mailto:${esc(d.site.kontak.email)}">${esc(d.site.kontak.email)}</a>`;
-  // berita
+  // berita — Baca Selengkapnya buka modal detail
+  _beritaCache=d.berita||[];
   const beritaGrid=document.querySelector('#berita .grid-3');
   if(beritaGrid) beritaGrid.innerHTML=(d.berita||[]).map((b,i)=>`
     <article class="news-card" data-aos="fade-up" data-aos-delay="${i*100}">
       <div class="news-thumb"><img src="${esc(toSrc(b.img))}" loading="lazy" alt="" onerror="this.style.display='none'"><span class="news-date"><i class="fa-regular fa-calendar"></i> ${esc(b.tgl)}</span></div>
-      <div class="news-body"><span class="tag ${esc(b.tagClass||'')}">${esc(b.tag)}</span><h4>${esc(b.judul)}</h4><p>${esc(b.excerpt)}</p><a href="#" class="read-more">Baca Selengkapnya <i class="fa-solid fa-arrow-right"></i></a></div>
+      <div class="news-body"><span class="tag ${esc(b.tagClass||'')}">${esc(b.tag)}</span><h4>${esc(b.judul)}</h4><p>${esc(b.excerpt)}</p><button type="button" class="read-more" onclick="openBeritaModal('${esc(b.id)}')">Baca Selengkapnya <i class="fa-solid fa-arrow-right"></i></button></div>
     </article>`).join('') || '<p style="color:var(--muted)">Belum ada berita.</p>';
   // program
   const progGrid=document.querySelector('.prog-grid');
@@ -106,6 +107,26 @@ function initSliders(){
   track.onmouseenter=()=>clearInterval(testiTimer);
   track.onmouseleave=play;
 }
+
+// Berita — modal detail untuk "Baca Selengkapnya"
+function openBeritaModal(id){
+  const b=_beritaCache.find(x=>x.id===id); if(!b) return;
+  const m=document.getElementById('beritaModal'); if(!m) return;
+  const img=document.getElementById('bmImg');
+  if(b.img){ img.src=toSrc(b.img); img.style.display=''; } else img.style.display='none';
+  const tagEl=document.getElementById('bmTag'); tagEl.textContent=b.tag||''; tagEl.className='tag '+(b.tagClass||'');
+  document.getElementById('bmTgl').innerHTML='<i class="fa-regular fa-calendar"></i> '+esc(b.tgl||'');
+  document.getElementById('bmJudul').textContent=b.judul||'';
+  document.getElementById('bmExcerpt').textContent=b.excerpt||'';
+  document.getElementById('bmKonten').textContent=b.konten||b.excerpt||'';
+  m.classList.add('open'); m.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+}
+function closeBeritaModal(){
+  const m=document.getElementById('beritaModal'); if(!m) return;
+  m.classList.remove('open'); m.setAttribute('aria-hidden','true'); document.body.style.overflow='';
+}
+window.openBeritaModal=openBeritaModal; window.closeBeritaModal=closeBeritaModal;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeBeritaModal(); });
 
 Store.load().then(renderFromData).catch(()=>renderFromData(Store.defaults));
 

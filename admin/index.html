@@ -262,22 +262,25 @@ async function markRead(id){
   await renderAll();
 }
 
-// Berita
+// Berita — tag jadi select, konten = isi lengkap untuk modal
 function openBerita(id){
   const it=id? cache.berita.find(x=>x.id===id): null;
+  const tagVal=it?.tag||'Kegiatan';
   openModal(`
     <h3>${it?'Edit':'Tambah'} Berita</h3>
     <label class="field">Judul<input id="m_judul" value="${esc(it?.judul||'')}"></label>
-    <label class="field">Excerpt<textarea id="m_excerpt" rows="2">${esc(it?.excerpt||'')}</textarea></label>
-    <div class="form-row"><label class="field">Tag<input id="m_tag" value="${esc(it?.tag||'Kegiatan')}"></label><label class="field">Tag class (gold/green/ kosong)<input id="m_tagClass" value="${esc(it?.tagClass||'')}"></label></div>
+    <label class="field">Tag<select id="m_tag"><option value="Kegiatan" ${tagVal==='Kegiatan'?'selected':''}>Kegiatan</option><option value="Pengumuman" ${tagVal==='Pengumuman'?'selected':''}>Pengumuman</option><option value="Prestasi" ${tagVal==='Prestasi'?'selected':''}>Prestasi</option></select></label>
+    <label class="field">Excerpt (ringkas, tampil di card)<textarea id="m_excerpt" rows="2">${esc(it?.excerpt||'')}</textarea></label>
+    <label class="field">Konten lengkap (tampil di Baca Selengkapnya)<textarea id="m_konten" rows="6" placeholder="Tulis isi lengkap berita...">${esc(it?.konten||it?.excerpt||'')}</textarea></label>
     <div class="form-row"><label class="field">Tanggal<input id="m_tgl" type="date" value="${esc(it?.tgl||new Date().toISOString().slice(0,10))}"></label><label class="field">Gambar <input type="file" id="m_imgFile" accept="image/*"><input type="hidden" id="m_img" value="${esc(it?.img||'')}"><img id="m_imgPreview" style="width:80px;height:56px;object-fit:cover;border-radius:8px;margin-top:8px;${it?.img?'display:block':'display:none'}" src="${it?.img?esc(resolveUrl(it.img)):''}"></label></div>
     <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="saveBerita('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
   `);
   wireUpload(document.getElementById('m_imgFile'),document.getElementById('m_img'),document.getElementById('m_imgPreview'));
 }
 async function saveBerita(id){
-  const v={judul:m_judul.value.trim(),excerpt:m_excerpt.value.trim(),tag:m_tag.value.trim(),tagClass:m_tagClass.value.trim(),tgl:m_tgl.value,img:m_img.value.trim()||'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80'};
+  const v={judul:m_judul.value.trim(),excerpt:m_excerpt.value.trim(),konten:m_konten.value.trim(),tag:m_tag.value,tgl:m_tgl.value,img:m_img.value.trim()||'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80'};
   if(!v.judul||!v.excerpt) {alert('Judul & excerpt wajib.');return}
+  if(!v.konten) v.konten=v.excerpt;
   if(id) await Store.api('/crud.php?table=berita',{method:'PUT',body:JSON.stringify({id,...v})});
   else await Store.api('/crud.php?table=berita',{method:'POST',body:JSON.stringify(v)});
   closeModal(); await renderAll();
