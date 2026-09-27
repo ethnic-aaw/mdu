@@ -11,6 +11,7 @@ addEventListener('scroll',spy,{passive:true}); spy();
 
 // ---- Render from Store (API-backed) ----
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function toSrc(u){ if(!u) return ''; if(u.startsWith('http')||u.startsWith('data:')||u.startsWith('/')) return u; return u; } // uploads/xxx on same host
 function normalizeStats(stats){
   if(!Array.isArray(stats)) return Store.defaults.site.stats;
   return stats.map(s=> s.v!==undefined ? s : {v:s['v']||s[Object.keys(s)[0]], l:s['l']||s[Object.keys(s)[1]]||''});
@@ -35,7 +36,7 @@ function renderFromData(d){
   const visiP=document.querySelector('.visi-card p'); if(visiP) visiP.textContent=d.site.visi;
   const misiUl=document.querySelector('.misi-list'); if(misiUl) misiUl.innerHTML=(d.site.misi||[]).map(m=>`<li><i class="fa-solid fa-check"></i> ${esc(m)}</li>`).join('');
   // sambutan
-  const sImg=document.querySelector('.sambutan-photo img'); if(sImg) sImg.src=d.site.sambutan.foto;
+  const sImg=document.querySelector('.sambutan-photo img'); if(sImg) sImg.src=toSrc(d.site.sambutan.foto);
   const sName=document.querySelector('.sambutan-name b'); if(sName) sName.textContent=d.site.sambutan.nama;
   const sJab=document.querySelector('.sambutan-name span'); if(sJab) sJab.textContent=d.site.sambutan.jabatan;
   const sJudul=document.querySelector('.sambutan-text h3'); if(sJudul) sJudul.textContent=d.site.sambutan.judul;
@@ -49,7 +50,7 @@ function renderFromData(d){
   const beritaGrid=document.querySelector('#berita .grid-3');
   if(beritaGrid) beritaGrid.innerHTML=(d.berita||[]).map((b,i)=>`
     <article class="news-card" data-aos="fade-up" data-aos-delay="${i*100}">
-      <div class="news-thumb"><img src="${esc(b.img)}" loading="lazy" alt=""><span class="news-date"><i class="fa-regular fa-calendar"></i> ${esc(b.tgl)}</span></div>
+      <div class="news-thumb"><img src="${esc(toSrc(b.img))}" loading="lazy" alt="" onerror="this.style.display='none'"><span class="news-date"><i class="fa-regular fa-calendar"></i> ${esc(b.tgl)}</span></div>
       <div class="news-body"><span class="tag ${esc(b.tagClass||'')}">${esc(b.tag)}</span><h4>${esc(b.judul)}</h4><p>${esc(b.excerpt)}</p><a href="#" class="read-more">Baca Selengkapnya <i class="fa-solid fa-arrow-right"></i></a></div>
     </article>`).join('') || '<p style="color:var(--muted)">Belum ada berita.</p>';
   // program
@@ -59,7 +60,7 @@ function renderFromData(d){
   // fasilitas
   const fasGrid=document.querySelector('.fasilitas-grid');
   if(fasGrid) fasGrid.innerHTML=(d.fasilitas||[]).map((f,i)=>`
-    <div class="fas-card ${esc(f.wide||'')}" data-aos="zoom-in" data-aos-delay="${i*50}"><img src="${esc(f.img)}" loading="lazy" alt=""><div class="fas-overlay"><h4><i class="fa-solid ${esc(f.icon)}"></i> ${esc(f.judul)}</h4><p>${esc(f.desc)}</p></div></div>`).join('');
+    <div class="fas-card ${esc(f.wide||'')}" data-aos="zoom-in" data-aos-delay="${i*50}"><img src="${esc(toSrc(f.img))}" loading="lazy" alt="" onerror="this.style.display='none'"><div class="fas-overlay"><h4><i class="fa-solid ${esc(f.icon)}"></i> ${esc(f.judul)}</h4><p>${esc(f.desc)}</p></div></div>`).join('');
   // ekskul
   const ekTrack=document.getElementById('ekskulTrack');
   if(ekTrack) ekTrack.innerHTML=(d.ekskul||[]).map(e=>`
@@ -67,11 +68,11 @@ function renderFromData(d){
   // prestasi
   const prGrid=document.getElementById('prestasiGrid');
   if(prGrid) prGrid.innerHTML=(d.prestasi||[]).map((p,i)=>`
-    <div class="prestasi-card" data-cat="${esc(p.kat)}" data-aos="fade-up" data-aos-delay="${i*40}"><img src="${esc(p.img)}" loading="lazy" alt=""><div class="prestasi-info"><span class="lvl">${esc(p.level)}</span><h4>${esc(p.judul)}</h4><p>${esc(p.lokasi)}</p></div></div>`).join('') || '<p style="color:var(--muted)">Belum ada prestasi.</p>';
+    <div class="prestasi-card" data-cat="${esc(p.kat)}" data-aos="fade-up" data-aos-delay="${i*40}"><img src="${esc(toSrc(p.img))}" loading="lazy" alt="" onerror="this.style.display='none'"><div class="prestasi-info"><span class="lvl">${esc(p.level)}</span><h4>${esc(p.judul)}</h4><p>${esc(p.lokasi)}</p></div></div>`).join('') || '<p style="color:var(--muted)">Belum ada prestasi.</p>';
   // testimoni
   const tTrack=document.getElementById('testiTrack'), tDots=document.getElementById('testiDots');
   if(tTrack) tTrack.innerHTML=(d.testimoni||[]).map(t=>`
-    <div class="testi-card"><img src="${esc(t.foto)}" alt=""><p>“${esc(t.teks)}”</p><b>${esc(t.nama)}</b><span>${esc(t.peran)}</span></div>`).join('') || '<div class="testi-card"><p>Belum ada testimoni.</p></div>';
+    <div class="testi-card"><img src="${esc(toSrc(t.foto))}" alt="" onerror="this.style.display='none'"><p>“${esc(t.teks)}”</p><b>${esc(t.nama)}</b><span>${esc(t.peran)}</span></div>`).join('') || '<div class="testi-card"><p>Belum ada testimoni.</p></div>';
   if(tDots) tDots.innerHTML=(d.testimoni||[]).map((_,i)=>`<span class="dot ${i===0?'active':''}"></span>`).join('');
   if(window.AOS) AOS.refresh();
   initSliders();

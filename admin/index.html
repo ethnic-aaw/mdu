@@ -68,7 +68,7 @@
         <h3><i class="fa-solid fa-user-tie"></i> Sambutan Kepala Sekolah</h3>
         <div class="form-inline">
           <div class="form-row"><label class="field">Nama<input id="s_samNama"></label><label class="field">Jabatan<input id="s_samJab"></label></div>
-          <label class="field">Foto URL<input id="s_samFoto" placeholder="https://..."></label>
+          <label class="field">Foto <input type="file" id="s_samFotoFile" accept="image/*"><input type="hidden" id="s_samFoto"><img id="s_samFotoPreview" style="width:80px;height:80px;object-fit:cover;border-radius:10px;margin-top:8px;display:none"></label>
           <label class="field">Judul Sambutan<input id="s_samJudul"></label>
           <label class="field">Paragraf 1<textarea id="s_samP1" rows="2"></textarea></label>
           <label class="field">Paragraf 2<textarea id="s_samP2" rows="2"></textarea></label>
@@ -164,6 +164,19 @@ async function init(){
   await renderAll();
 }
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function resolveUrl(u){ if(!u) return ''; if(u.startsWith('http')||u.startsWith('data:')||u.startsWith('/')) return u; if(u.startsWith('uploads/')) return '../'+u; return u; }
+async function uploadToServer(file){ const fd=new FormData(); fd.append('file',file); const r=await fetch('../api/upload.php',{method:'POST',body:fd,credentials:'same-origin'}); const j=await r.json(); if(!r.ok) throw new Error(j.error||'Gagal upload: '+(j.error||r.status)); return j.url; }
+function wireUpload(fileInput, hiddenInput, previewImg){
+  if(!fileInput||!hiddenInput||!previewImg) return;
+  if(hiddenInput.value){ previewImg.src=resolveUrl(hiddenInput.value); previewImg.style.display='block'; }
+  fileInput.addEventListener('change', async()=>{
+    const f=fileInput.files[0]; if(!f) return;
+    if(f.size>5*1024*1024){ alert('Maks 5MB'); fileInput.value=''; return; }
+    if(!f.type.startsWith('image/')){ alert('Hanya gambar'); fileInput.value=''; return; }
+    fileInput.disabled=true;
+    try{ const url=await uploadToServer(f); hiddenInput.value=url; previewImg.src=resolveUrl(url); previewImg.style.display='block'; }catch(e){ alert(e.message); }finally{ fileInput.disabled=false; }
+  });
+}
 
 async function fetchInbox(){ try{ return await Store.api('/inbox.php'); }catch{ return []; } }
 async function fetchUsers(){ try{ return await Store.api('/users.php'); }catch{ return []; } }
@@ -192,17 +205,17 @@ async function renderAll(){
     s_s1v.value=norm[0]?.v||''; s_s1l.value=norm[0]?.l||''; s_s2v.value=norm[1]?.v||''; s_s2l.value=norm[1]?.l||'';
     s_s3v.value=norm[2]?.v||''; s_s3l.value=norm[2]?.l||''; s_s4v.value=norm[3]?.v||''; s_s4l.value=norm[3]?.l||'';
     s_tentangTitle.value=s.tentangTitle||''; s_tentangDesc.value=s.tentangDesc||''; s_visi.value=s.visi||''; s_misi.value=(s.misi||[]).join('\n');
-    s_samNama.value=s.sambutan?.nama||''; s_samJab.value=s.sambutan?.jabatan||''; s_samFoto.value=s.sambutan?.foto||''; s_samJudul.value=s.sambutan?.judul||'';
+    s_samNama.value=s.sambutan?.nama||''; s_samJab.value=s.sambutan?.jabatan||''; s_samFoto.value=s.sambutan?.foto||''; if(s_samFoto.value){ s_samFotoPreview.src=resolveUrl(s_samFoto.value); s_samFotoPreview.style.display='block'; } wireUpload(s_samFotoFile,s_samFoto,s_samFotoPreview); s_samJudul.value=s.sambutan?.judul||'';
     s_samP1.value=s.sambutan?.p1||''; s_samP2.value=s.sambutan?.p2||''; s_samP3.value=s.sambutan?.p3||'';
     s_alamat.value=s.kontak?.alamat||''; s_tel.value=s.kontak?.tel||''; s_email.value=s.kontak?.email||'';
     window.siteFilled=true;
   }
-  tblBerita.innerHTML=(d.berita||[]).map(b=>`<tr><td><img src="${esc(b.img)}" alt="" loading="lazy"></td><td><b>${esc(b.judul)}</b><br><small class="muted">${esc(b.excerpt).slice(0,60)}...</small></td><td><span class="badge ${b.tagClass==='gold'?'badge-gold':b.tagClass==='green'?'badge-green':'badge-gray'}">${esc(b.tag)}</span></td><td>${esc(b.tgl)}</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openBerita('${b.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('berita','${b.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan=5 class="muted">Belum ada data.</td></tr>';
+  tblBerita.innerHTML=(d.berita||[]).map(b=>`<tr><td><img src="${esc(resolveUrl(b.img))}" alt="" loading="lazy" style="width:56px;height:40px;object-fit:cover;border-radius:8px"></td><td><b>${esc(b.judul)}</b><br><small class="muted">${esc(b.excerpt).slice(0,60)}...</small></td><td><span class="badge ${b.tagClass==='gold'?'badge-gold':b.tagClass==='green'?'badge-green':'badge-gray'}">${esc(b.tag)}</span></td><td>${esc(b.tgl)}</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openBerita('${b.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('berita','${b.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan=5 class="muted">Belum ada data.</td></tr>';
   tblProgram.innerHTML=(d.program||[]).map(p=>`<tr><td><i class="fa-solid ${esc(p.icon)}"></i> <small>${esc(p.icon)}</small></td><td>${esc(p.judul)} ${p.feat?'<span class="badge badge-gold">featured</span>':''}</td><td class="muted">${esc(p.desc).slice(0,60)}...</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openProgram('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('program','${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
-  tblFasilitas.innerHTML=(d.fasilitas||[]).map(f=>`<tr><td><img src="${esc(f.img)}" alt="" loading="lazy"></td><td>${esc(f.judul)}</td><td class="muted">${esc(f.desc).slice(0,60)}...</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openFasilitas('${f.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('fasilitas','${f.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+  tblFasilitas.innerHTML=(d.fasilitas||[]).map(f=>`<tr><td><img src="${esc(resolveUrl(f.img))}" alt="" loading="lazy" style="width:56px;height:40px;object-fit:cover;border-radius:8px"></td><td>${esc(f.judul)}</td><td class="muted">${esc(f.desc).slice(0,60)}...</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openFasilitas('${f.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('fasilitas','${f.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
   tblEkskul.innerHTML=(d.ekskul||[]).map(e=>`<tr><td><span style="display:inline-block;width:22px;height:22px;border-radius:6px;background:${esc(e.color)}"></span> ${esc(e.color)}</td><td><i class="fa-solid ${esc(e.icon)}"></i> ${esc(e.judul)}</td><td class="muted">${esc(e.desc)}</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openEkskul('${e.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('ekskul','${e.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
-  tblPrestasi.innerHTML=(d.prestasi||[]).map(p=>`<tr><td><img src="${esc(p.img)}" alt="" loading="lazy"></td><td>${esc(p.judul)}</td><td><span class="badge badge-gray">${esc(p.kat)}</span></td><td>${esc(p.level)}</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openPrestasi('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('prestasi','${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
-  tblTesti.innerHTML=(d.testimoni||[]).map(t=>`<tr><td><img src="${esc(t.foto)}" style="width:44px;height:44px;border-radius:50%" alt=""></td><td>${esc(t.nama)}</td><td class="muted">${esc(t.peran)}</td><td class="muted" style="max-width:220px">${esc(t.teks).slice(0,70)}...</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openTesti('${t.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('testimoni','${t.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+  tblPrestasi.innerHTML=(d.prestasi||[]).map(p=>`<tr><td><img src="${esc(resolveUrl(p.img))}" alt="" loading="lazy" style="width:56px;height:40px;object-fit:cover;border-radius:8px"></td><td>${esc(p.judul)}</td><td><span class="badge badge-gray">${esc(p.kat)}</span></td><td>${esc(p.level)}</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openPrestasi('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('prestasi','${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+  tblTesti.innerHTML=(d.testimoni||[]).map(t=>`<tr><td><img src="${esc(resolveUrl(t.foto))}" style="width:44px;height:44px;border-radius:50%;object-fit:cover" alt=""></td><td>${esc(t.nama)}</td><td class="muted">${esc(t.peran)}</td><td class="muted" style="max-width:220px">${esc(t.teks).slice(0,70)}...</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openTesti('${t.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('testimoni','${t.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
   tblInbox.innerHTML=inbox.map(m=>`<tr style="${m.read?'':'background:#FFFBEB'}"><td>${esc(m.tgl)}</td><td>${esc(m.nama)}</td><td>${esc(m.kontak)}</td><td>${esc(m.subjek)}</td><td style="max-width:240px" class="muted">${esc(m.pesan)}</td><td class="actions">${!m.read?`<button class="btn btn-ghost btn-sm" onclick="markRead('${m.id}')"><i class="fa-solid fa-check"></i> Tandai dibaca</button>`:''}<button class="btn btn-danger btn-sm" onclick="delInbox('${m.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan=6 class="muted">Belum ada pesan.</td></tr>';
   tblUsers.innerHTML=users.map(u=>`<tr><td><b>${esc(u.username)}</b></td><td>${esc(u.nama)}</td><td><span class="badge ${u.role==='admin'?'badge-gold':'badge-green'}">${esc(u.role)}</span></td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="resetPass('${u.id}')"><i class="fa-solid fa-key"></i> Reset pass</button>${u.id!==sess.id?`<button class="btn btn-danger btn-sm" onclick="delUser('${u.id}')"><i class="fa-solid fa-trash"></i></button>`: '<small class="muted">Anda</small>'}</td></tr>`).join('');
 }
@@ -257,9 +270,10 @@ function openBerita(id){
     <label class="field">Judul<input id="m_judul" value="${esc(it?.judul||'')}"></label>
     <label class="field">Excerpt<textarea id="m_excerpt" rows="2">${esc(it?.excerpt||'')}</textarea></label>
     <div class="form-row"><label class="field">Tag<input id="m_tag" value="${esc(it?.tag||'Kegiatan')}"></label><label class="field">Tag class (gold/green/ kosong)<input id="m_tagClass" value="${esc(it?.tagClass||'')}"></label></div>
-    <div class="form-row"><label class="field">Tanggal<input id="m_tgl" type="date" value="${esc(it?.tgl||new Date().toISOString().slice(0,10))}"></label><label class="field">Gambar URL<input id="m_img" value="${esc(it?.img||'')}"></label></div>
+    <div class="form-row"><label class="field">Tanggal<input id="m_tgl" type="date" value="${esc(it?.tgl||new Date().toISOString().slice(0,10))}"></label><label class="field">Gambar <input type="file" id="m_imgFile" accept="image/*"><input type="hidden" id="m_img" value="${esc(it?.img||'')}"><img id="m_imgPreview" style="width:80px;height:56px;object-fit:cover;border-radius:8px;margin-top:8px;${it?.img?'display:block':'display:none'}" src="${it?.img?esc(resolveUrl(it.img)):''}"></label></div>
     <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="saveBerita('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
   `);
+  wireUpload(document.getElementById('m_imgFile'),document.getElementById('m_img'),document.getElementById('m_imgPreview'));
 }
 async function saveBerita(id){
   const v={judul:m_judul.value.trim(),excerpt:m_excerpt.value.trim(),tag:m_tag.value.trim(),tagClass:m_tagClass.value.trim(),tgl:m_tgl.value,img:m_img.value.trim()||'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80'};
@@ -292,10 +306,11 @@ function openFasilitas(id){
     <h3>${it?'Edit':'Tambah'} Fasilitas</h3>
     <label class="field">Judul<input id="m_judul" value="${esc(it?.judul||'')}"></label>
     <label class="field">Deskripsi<textarea id="m_desc" rows="2">${esc(it?.desc||'')}</textarea></label>
-    <label class="field">Gambar URL<input id="m_img" value="${esc(it?.img||'')}"></label>
+    <label class="field">Gambar <input type="file" id="m_imgFile" accept="image/*"><input type="hidden" id="m_img" value="${esc(it?.img||'')}"><img id="m_imgPreview" style="width:80px;height:56px;object-fit:cover;border-radius:8px;margin-top:8px;${it?.img?'display:block':'display:none'}" src="${it?.img?esc(resolveUrl(it.img)):''}"></label>
     <div class="form-row"><label class="field">Icon fa-xxx<input id="m_icon" value="${esc(it?.icon||'fa-building')}"></label><label class="field">Wide? (wide)<input id="m_wide" value="${esc(it?.wide||'')}"></label></div>
     <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="saveFasilitas('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
   `);
+  wireUpload(document.getElementById('m_imgFile'),document.getElementById('m_img'),document.getElementById('m_imgPreview'));
 }
 async function saveFasilitas(id){
   const v={judul:m_judul.value.trim(),desc:m_desc.value.trim(),img:m_img.value.trim()||'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80',icon:m_icon.value.trim(),wide:m_wide.value.trim()};
@@ -327,9 +342,10 @@ function openPrestasi(id){
     <h3>${it?'Edit':'Tambah'} Prestasi</h3>
     <label class="field">Judul<input id="m_judul" value="${esc(it?.judul||'')}"></label>
     <div class="form-row"><label class="field">Level<input id="m_level" value="${esc(it?.level||'')}"></label><label class="field">Lokasi<input id="m_lok" value="${esc(it?.lokasi||'')}"></label></div>
-    <div class="form-row"><label class="field">Kategori<select id="m_kat"><option value="akademik" ${it?.kat==='akademik'?'selected':''}>akademik</option><option value="seni" ${it?.kat==='seni'?'selected':''}>seni</option><option value="olahraga" ${it?.kat==='olahraga'?'selected':''}>olahraga</option></select></label><label class="field">Gambar URL<input id="m_img" value="${esc(it?.img||'')}"></label></div>
+    <div class="form-row"><label class="field">Kategori<select id="m_kat"><option value="akademik" ${it?.kat==='akademik'?'selected':''}>akademik</option><option value="seni" ${it?.kat==='seni'?'selected':''}>seni</option><option value="olahraga" ${it?.kat==='olahraga'?'selected':''}>olahraga</option></select></label><label class="field">Gambar <input type="file" id="m_imgFile" accept="image/*"><input type="hidden" id="m_img" value="${esc(it?.img||'')}"><img id="m_imgPreview" style="width:80px;height:56px;object-fit:cover;border-radius:8px;margin-top:8px;${it?.img?'display:block':'display:none'}" src="${it?.img?esc(resolveUrl(it.img)):''}"></label></div>
     <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="savePrestasi('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
   `);
+  wireUpload(document.getElementById('m_imgFile'),document.getElementById('m_img'),document.getElementById('m_imgPreview'));
 }
 async function savePrestasi(id){
   const v={judul:m_judul.value.trim(),level:m_level.value.trim(),lokasi:m_lok.value.trim(),kat:m_kat.value,img:m_img.value.trim()||'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=600&q=80'};
@@ -344,10 +360,11 @@ function openTesti(id){
     <h3>${it?'Edit':'Tambah'} Testimoni</h3>
     <label class="field">Nama<input id="m_nama" value="${esc(it?.nama||'')}"></label>
     <label class="field">Peran<input id="m_peran" value="${esc(it?.peran||'')}"></label>
-    <label class="field">Foto URL<input id="m_foto" value="${esc(it?.foto||'https://i.pravatar.cc/120?img=5')}"></label>
+    <label class="field">Foto <input type="file" id="m_fotoFile" accept="image/*"><input type="hidden" id="m_foto" value="${esc(it?.foto||'https://i.pravatar.cc/120?img=5')}"><img id="m_fotoPreview" style="width:56px;height:56px;border-radius:50%;object-fit:cover;margin-top:8px;${it?.foto?'display:block':'display:none'}" src="${it?.foto?esc(resolveUrl(it.foto)):''}"></label>
     <label class="field">Teks<textarea id="m_teks" rows="3">${esc(it?.teks||'')}</textarea></label>
     <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="saveTesti('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
   `);
+  wireUpload(document.getElementById('m_fotoFile'),document.getElementById('m_foto'),document.getElementById('m_fotoPreview'));
 }
 async function saveTesti(id){
   const v={nama:m_nama.value.trim(),peran:m_peran.value.trim(),foto:m_foto.value.trim(),teks:m_teks.value.trim()};
