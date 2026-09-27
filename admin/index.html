@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — MDU Al-Ittihad</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="../css/admin.css">
+<style>.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px;z-index:50}.modal-card{background:#fff;border-radius:16px;padding:18px;width:min(560px,100%);max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.2)}</style>
+</head>
+<body>
+<div class="topbar">
+  <b><i class="fa-solid fa-mosque" style="color:var(--green)"></i> MDU Admin <small id="dbInfo" class="muted" style="font-weight:400;margin-left:8px"></small></b>
+  <div class="topbar-right">
+    <span id="who" class="badge badge-gray"></span>
+    <a href="../index.html" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-eye"></i> Lihat Website</a>
+    <button id="logout" class="btn btn-ghost btn-sm"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
+  </div>
+</div>
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <button class="side-link active" data-tab="dash"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+    <button class="side-link" data-tab="site"><i class="fa-solid fa-sliders"></i> Site & Profil</button>
+    <button class="side-link" data-tab="berita"><i class="fa-solid fa-newspaper"></i> Berita</button>
+    <button class="side-link" data-tab="program"><i class="fa-solid fa-graduation-cap"></i> Program</button>
+    <button class="side-link" data-tab="fasilitas"><i class="fa-solid fa-building"></i> Fasilitas</button>
+    <button class="side-link" data-tab="ekskul"><i class="fa-solid fa-people-group"></i> Ekstrakurikuler</button>
+    <button class="side-link" data-tab="prestasi"><i class="fa-solid fa-trophy"></i> Prestasi</button>
+    <button class="side-link" data-tab="testimoni"><i class="fa-solid fa-comment-dots"></i> Testimoni</button>
+    <button class="side-link" data-tab="inbox"><i class="fa-solid fa-inbox"></i> Pesan Masuk <span id="inboxBadge" class="badge badge-gold" style="margin-left:auto"></span></button>
+    <button class="side-link" data-tab="users"><i class="fa-solid fa-users-gear"></i> Users</button>
+  </nav>
+  <main class="content">
+    <div id="tab-dash">
+      <div class="kpi">
+        <div class="card"><b id="kBerita">0</b><span>Berita</span></div>
+        <div class="card"><b id="kProgram">0</b><span>Program</span></div>
+        <div class="card"><b id="kFas">0</b><span>Fasilitas</span></div>
+        <div class="card"><b id="kInbox">0</b><span>Pesan Masuk</span></div>
+      </div>
+      <div class="card">
+        <h3><i class="fa-solid fa-database" style="color:var(--green)"></i> Backend Aktif — SQLite</h3>
+        <p class="muted">Semua data tersimpan di <code>data/mdu.db</code> (SQLite) via PHP REST API. Refresh <a href="../index.html" target="_blank" style="color:var(--green2);font-weight:700">halaman utama</a> untuk melihat perubahan langsung. DB file ganti ke MySQL cukup ubah DSN di <code>api/config.php</code> (<code>ponytail</code>).</p>
+        <p class="muted" style="margin-top:8px">Auth: session PHP + <code>password_hash</code>. Roles: <b>admin</b>=full, <b>editor</b>=konten.</p>
+      </div>
+    </div>
+    <div id="tab-site" class="hide">
+      <div class="card">
+        <h3><i class="fa-solid fa-star"></i> Hero & Tentang</h3>
+        <div class="form-inline">
+          <label class="field">Hero Title (HTML allowed)<input id="s_heroTitle"></label>
+          <label class="field">Slogan<input id="s_slogan"></label>
+          <label class="field">Hero Desc<textarea id="s_heroDesc" rows="2"></textarea></label>
+          <div class="grid2">
+            <label class="field">Stat 1 (value)<input id="s_s1v" placeholder="500+"></label><label class="field">Stat 1 label<input id="s_s1l"></label>
+            <label class="field">Stat 2<input id="s_s2v"></label><label class="field">Label<input id="s_s2l"></label>
+            <label class="field">Stat 3<input id="s_s3v"></label><label class="field">Label<input id="s_s3l"></label>
+            <label class="field">Stat 4<input id="s_s4v"></label><label class="field">Label<input id="s_s4l"></label>
+          </div>
+          <label class="field">Tentang Title (HTML)<input id="s_tentangTitle"></label>
+          <label class="field">Tentang Desc<textarea id="s_tentangDesc" rows="2"></textarea></label>
+          <label class="field">Visi<textarea id="s_visi" rows="2"></textarea></label>
+          <label class="field">Misi (1 baris = 1 poin)<textarea id="s_misi" rows="4"></textarea></label>
+        </div>
+      </div>
+      <div class="card">
+        <h3><i class="fa-solid fa-user-tie"></i> Sambutan Kepala Sekolah</h3>
+        <div class="form-inline">
+          <div class="form-row"><label class="field">Nama<input id="s_samNama"></label><label class="field">Jabatan<input id="s_samJab"></label></div>
+          <label class="field">Foto URL<input id="s_samFoto" placeholder="https://..."></label>
+          <label class="field">Judul Sambutan<input id="s_samJudul"></label>
+          <label class="field">Paragraf 1<textarea id="s_samP1" rows="2"></textarea></label>
+          <label class="field">Paragraf 2<textarea id="s_samP2" rows="2"></textarea></label>
+          <label class="field">Paragraf 3<textarea id="s_samP3" rows="2"></textarea></label>
+        </div>
+      </div>
+      <div class="card">
+        <h3><i class="fa-solid fa-address-book"></i> Kontak</h3>
+        <div class="form-inline">
+          <label class="field">Alamat<textarea id="s_alamat" rows="2"></textarea></label>
+          <div class="form-row"><label class="field">Tel / WA<input id="s_tel"></label><label class="field">Email<input id="s_email"></label></div>
+          <button class="btn btn-primary" onclick="saveSite()"><i class="fa-solid fa-floppy-disk"></i> Simpan Site & Profil</button>
+          <span id="siteMsg" class="ok"></span>
+        </div>
+      </div>
+    </div>
+    <div id="tab-berita" class="hide">
+      <div class="card">
+        <h3><i class="fa-solid fa-newspaper"></i> Berita & Kegiatan <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openBerita()"><i class="fa-solid fa-plus"></i> Tambah</button></h3>
+        <div class="table-wrap"><table><thead><tr><th>Gambar</th><th>Judul</th><th>Tag</th><th>Tgl</th><th>Aksi</th></tr></thead><tbody id="tblBerita"></tbody></table></div>
+      </div>
+    </div>
+    <div id="tab-program" class="hide">
+      <div class="card">
+        <h3><i class="fa-solid fa-graduation-cap"></i> Program Akademik <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openProgram()"><i class="fa-solid fa-plus"></i> Tambah</button></h3>
+        <div class="table-wrap"><table><thead><tr><th>Icon</th><th>Judul</th><th>Deskripsi</th><th>Aksi</th></tr></thead><tbody id="tblProgram"></tbody></table></div>
+      </div>
+    </div>
+    <div id="tab-fasilitas" class="hide">
+      <div class="card">
+        <h3><i class="fa-solid fa-building"></i> Fasilitas <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openFasilitas()"><i class="fa-solid fa-plus"></i> Tambah</button></h3>
+        <div class="table-wrap"><table><thead><tr><th>Gambar</th><th>Judul</th><th>Deskripsi</th><th>Aksi</th></tr></thead><tbody id="tblFasilitas"></tbody></table></div>
+      </div>
+    </div>
+    <div id="tab-ekskul" class="hide">
+      <div class="card">
+        <h3><i class="fa-solid fa-people-group"></i> Ekstrakurikuler <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openEkskul()"><i class="fa-solid fa-plus"></i> Tambah</button></h3>
+        <div class="table-wrap"><table><thead><tr><th>Warna</th><th>Judul</th><th>Deskripsi</th><th>Aksi</th></tr></thead><tbody id="tblEkskul"></tbody></table></div>
+      </div>
+    </div>
+    <div id="tab-prestasi" class="hide">
+      <div class="card">
+        <h3><i class="fa-solid fa-trophy"></i> Prestasi <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openPrestasi()"><i class="fa-solid fa-plus"></i> Tambah</button></h3>
+        <div class="table-wrap"><table><thead><tr><th>Gambar</th><th>Judul</th><th>Kategori</th><th>Level</th><th>Aksi</th></tr></thead><tbody id="tblPrestasi"></tbody></table></div>
+      </div>
+    </div>
+    <div id="tab-testimoni" class="hide">
+      <div class="card">
+        <h3><i class="fa-solid fa-comment-dots"></i> Testimoni <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openTesti()"><i class="fa-solid fa-plus"></i> Tambah</button></h3>
+        <div class="table-wrap"><table><thead><tr><th>Foto</th><th>Nama</th><th>Peran</th><th>Teks</th><th>Aksi</th></tr></thead><tbody id="tblTesti"></tbody></table></div>
+      </div>
+    </div>
+    <div id="tab-inbox" class="hide">
+      <div class="card">
+        <h3><i class="fa-solid fa-inbox"></i> Pesan Masuk</h3>
+        <div class="table-wrap"><table><thead><tr><th>Tgl</th><th>Nama</th><th>Kontak</th><th>Subjek</th><th>Pesan</th><th>Aksi</th></tr></thead><tbody id="tblInbox"></tbody></table></div>
+      </div>
+    </div>
+    <div id="tab-users" class="hide">
+      <div class="card">
+        <h3><i class="fa-solid fa-users-gear"></i> Manajemen User</h3>
+        <p class="muted">Roles: <b>admin</b> (full), <b>editor</b> (konten saja). Password aman <code>password_hash()</code>.</p>
+        <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Username</th><th>Nama</th><th>Role</th><th>Aksi</th></tr></thead><tbody id="tblUsers"></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3><i class="fa-solid fa-user-plus"></i> Tambah User</h3>
+        <div class="form-inline">
+          <div class="form-row"><label class="field">Username<input id="u_user"></label><label class="field">Nama<input id="u_nama"></label></div>
+          <div class="form-row"><label class="field">Password<input id="u_pass" type="password" placeholder="min 6 char"></label><label class="field">Role<select id="u_role"><option value="admin">admin</option><option value="editor">editor</option></select></label></div>
+          <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-primary" onclick="addUser()"><i class="fa-solid fa-plus"></i> Simpan User</button><span id="userMsg" class="ok"></span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="modal" class="modal hide" onclick="if(event.target===this)closeModal()"><div class="modal-card" id="modalBody"></div></div>
+<script src="../js/store.js"></script>
+<script>
+let sess=null, cache={};
+async function init(){
+  sess=await Store.requireAuth();
+  document.getElementById('who').textContent=sess.username+' • '+sess.role;
+  document.getElementById('dbInfo').textContent='DB: data/mdu.db';
+  document.getElementById('logout').onclick=async()=>{ await Store.logout(); location.href='login.html'; };
+  // tabs
+  const links=[...document.querySelectorAll('.side-link')];
+  links.forEach(b=>b.addEventListener('click',()=>{
+    links.forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    document.querySelectorAll('[id^="tab-"]').forEach(el=>el.classList.add('hide'));
+    document.getElementById('tab-'+b.dataset.tab).classList.remove('hide');
+    renderAll();
+  }));
+  await renderAll();
+}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+async function fetchInbox(){ try{ return await Store.api('/inbox.php'); }catch{ return []; } }
+async function fetchUsers(){ try{ return await Store.api('/users.php'); }catch{ return []; } }
+
+async function renderAll(){
+  const d=await Store.load(); cache=d;
+  // inbox & users for KPI
+  let inbox=[], users=[];
+  try{ inbox=await fetchInbox(); }catch{}
+  try{ users=await fetchUsers(); }catch{}
+  cache._inbox=inbox; cache._users=users;
+  document.getElementById('kBerita').textContent=(d.berita||[]).length;
+  document.getElementById('kProgram').textContent=(d.program||[]).length;
+  document.getElementById('kFas').textContent=(d.fasilitas||[]).length;
+  document.getElementById('kInbox').textContent=inbox.length;
+  const unread=inbox.filter(x=>!x.read && x.read!=1).length;
+  document.getElementById('inboxBadge').textContent=unread? unread+' baru':'';
+  document.getElementById('inboxBadge').style.display=unread?'':'none';
+
+  if(!window.siteFilled){
+    const s=d.site;
+    const stats=s.stats||[];
+    // normalize stats (assoc vs object)
+    const norm = stats.map(x=> x.v!==undefined? x : {v: Object.values(x)[0], l: Object.values(x)[1]||''});
+    s_heroTitle.value=s.heroTitle||''; s_slogan.value=s.slogan||''; s_heroDesc.value=s.heroDesc||'';
+    s_s1v.value=norm[0]?.v||''; s_s1l.value=norm[0]?.l||''; s_s2v.value=norm[1]?.v||''; s_s2l.value=norm[1]?.l||'';
+    s_s3v.value=norm[2]?.v||''; s_s3l.value=norm[2]?.l||''; s_s4v.value=norm[3]?.v||''; s_s4l.value=norm[3]?.l||'';
+    s_tentangTitle.value=s.tentangTitle||''; s_tentangDesc.value=s.tentangDesc||''; s_visi.value=s.visi||''; s_misi.value=(s.misi||[]).join('\n');
+    s_samNama.value=s.sambutan?.nama||''; s_samJab.value=s.sambutan?.jabatan||''; s_samFoto.value=s.sambutan?.foto||''; s_samJudul.value=s.sambutan?.judul||'';
+    s_samP1.value=s.sambutan?.p1||''; s_samP2.value=s.sambutan?.p2||''; s_samP3.value=s.sambutan?.p3||'';
+    s_alamat.value=s.kontak?.alamat||''; s_tel.value=s.kontak?.tel||''; s_email.value=s.kontak?.email||'';
+    window.siteFilled=true;
+  }
+  tblBerita.innerHTML=(d.berita||[]).map(b=>`<tr><td><img src="${esc(b.img)}" alt="" loading="lazy"></td><td><b>${esc(b.judul)}</b><br><small class="muted">${esc(b.excerpt).slice(0,60)}...</small></td><td><span class="badge ${b.tagClass==='gold'?'badge-gold':b.tagClass==='green'?'badge-green':'badge-gray'}">${esc(b.tag)}</span></td><td>${esc(b.tgl)}</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openBerita('${b.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('berita','${b.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan=5 class="muted">Belum ada data.</td></tr>';
+  tblProgram.innerHTML=(d.program||[]).map(p=>`<tr><td><i class="fa-solid ${esc(p.icon)}"></i> <small>${esc(p.icon)}</small></td><td>${esc(p.judul)} ${p.feat?'<span class="badge badge-gold">featured</span>':''}</td><td class="muted">${esc(p.desc).slice(0,60)}...</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openProgram('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('program','${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+  tblFasilitas.innerHTML=(d.fasilitas||[]).map(f=>`<tr><td><img src="${esc(f.img)}" alt="" loading="lazy"></td><td>${esc(f.judul)}</td><td class="muted">${esc(f.desc).slice(0,60)}...</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openFasilitas('${f.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('fasilitas','${f.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+  tblEkskul.innerHTML=(d.ekskul||[]).map(e=>`<tr><td><span style="display:inline-block;width:22px;height:22px;border-radius:6px;background:${esc(e.color)}"></span> ${esc(e.color)}</td><td><i class="fa-solid ${esc(e.icon)}"></i> ${esc(e.judul)}</td><td class="muted">${esc(e.desc)}</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openEkskul('${e.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('ekskul','${e.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+  tblPrestasi.innerHTML=(d.prestasi||[]).map(p=>`<tr><td><img src="${esc(p.img)}" alt="" loading="lazy"></td><td>${esc(p.judul)}</td><td><span class="badge badge-gray">${esc(p.kat)}</span></td><td>${esc(p.level)}</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openPrestasi('${p.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('prestasi','${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+  tblTesti.innerHTML=(d.testimoni||[]).map(t=>`<tr><td><img src="${esc(t.foto)}" style="width:44px;height:44px;border-radius:50%" alt=""></td><td>${esc(t.nama)}</td><td class="muted">${esc(t.peran)}</td><td class="muted" style="max-width:220px">${esc(t.teks).slice(0,70)}...</td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="openTesti('${t.id}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="delItem('testimoni','${t.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+  tblInbox.innerHTML=inbox.map(m=>`<tr style="${m.read?'':'background:#FFFBEB'}"><td>${esc(m.tgl)}</td><td>${esc(m.nama)}</td><td>${esc(m.kontak)}</td><td>${esc(m.subjek)}</td><td style="max-width:240px" class="muted">${esc(m.pesan)}</td><td class="actions">${!m.read?`<button class="btn btn-ghost btn-sm" onclick="markRead('${m.id}')"><i class="fa-solid fa-check"></i> Tandai dibaca</button>`:''}<button class="btn btn-danger btn-sm" onclick="delInbox('${m.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')||'<tr><td colspan=6 class="muted">Belum ada pesan.</td></tr>';
+  tblUsers.innerHTML=users.map(u=>`<tr><td><b>${esc(u.username)}</b></td><td>${esc(u.nama)}</td><td><span class="badge ${u.role==='admin'?'badge-gold':'badge-green'}">${esc(u.role)}</span></td><td class="actions"><button class="btn btn-ghost btn-sm" onclick="resetPass('${u.id}')"><i class="fa-solid fa-key"></i> Reset pass</button>${u.id!==sess.id?`<button class="btn btn-danger btn-sm" onclick="delUser('${u.id}')"><i class="fa-solid fa-trash"></i></button>`: '<small class="muted">Anda</small>'}</td></tr>`).join('');
+}
+
+async function saveSite(){
+  const payload={
+    heroTitle:s_heroTitle.value.trim(),
+    slogan:s_slogan.value.trim(),
+    heroDesc:s_heroDesc.value.trim(),
+    stats:[
+      {v:s_s1v.value.trim(),l:s_s1l.value.trim()},
+      {v:s_s2v.value.trim(),l:s_s2l.value.trim()},
+      {v:s_s3v.value.trim(),l:s_s3l.value.trim()},
+      {v:s_s4v.value.trim(),l:s_s4l.value.trim()},
+    ],
+    tentangTitle:s_tentangTitle.value.trim(),
+    tentangDesc:s_tentangDesc.value.trim(),
+    visi:s_visi.value.trim(),
+    misi:s_misi.value.split('\n').map(s=>s.trim()).filter(Boolean),
+    sambutan:{nama:s_samNama.value.trim(),jabatan:s_samJab.value.trim(),foto:s_samFoto.value.trim(),judul:s_samJudul.value.trim(),p1:s_samP1.value.trim(),p2:s_samP2.value.trim(),p3:s_samP3.value.trim()},
+    kontak:{alamat:s_alamat.value.trim(),tel:s_tel.value.trim(),email:s_email.value.trim()}
+  };
+  try{
+    await Store.api('/site.php',{method:'POST',body:JSON.stringify(payload)});
+    siteMsg.textContent='✓ Tersimpan ke DB.'; setTimeout(()=>siteMsg.textContent='',2500);
+    window.siteFilled=false; await renderAll();
+  }catch(e){ siteMsg.textContent='Error: '+e.message; siteMsg.className='err'; }
+}
+function openModal(html){modalBody.innerHTML=html; modal.classList.remove('hide')}
+function closeModal(){modal.classList.add('hide')}
+
+async function delItem(table,id){
+  if(!confirm('Hapus item ini?'))return;
+  await Store.api('/crud.php?table='+table+'&id='+encodeURIComponent(id),{method:'DELETE'});
+  await renderAll();
+}
+async function delInbox(id){
+  if(!confirm('Hapus pesan ini?'))return;
+  await Store.api('/inbox.php?id='+encodeURIComponent(id),{method:'DELETE'});
+  await renderAll();
+}
+async function markRead(id){
+  await Store.api('/inbox.php',{method:'PATCH',body:JSON.stringify({id})});
+  await renderAll();
+}
+
+// Berita
+function openBerita(id){
+  const it=id? cache.berita.find(x=>x.id===id): null;
+  openModal(`
+    <h3>${it?'Edit':'Tambah'} Berita</h3>
+    <label class="field">Judul<input id="m_judul" value="${esc(it?.judul||'')}"></label>
+    <label class="field">Excerpt<textarea id="m_excerpt" rows="2">${esc(it?.excerpt||'')}</textarea></label>
+    <div class="form-row"><label class="field">Tag<input id="m_tag" value="${esc(it?.tag||'Kegiatan')}"></label><label class="field">Tag class (gold/green/ kosong)<input id="m_tagClass" value="${esc(it?.tagClass||'')}"></label></div>
+    <div class="form-row"><label class="field">Tanggal<input id="m_tgl" type="date" value="${esc(it?.tgl||new Date().toISOString().slice(0,10))}"></label><label class="field">Gambar URL<input id="m_img" value="${esc(it?.img||'')}"></label></div>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="saveBerita('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
+  `);
+}
+async function saveBerita(id){
+  const v={judul:m_judul.value.trim(),excerpt:m_excerpt.value.trim(),tag:m_tag.value.trim(),tagClass:m_tagClass.value.trim(),tgl:m_tgl.value,img:m_img.value.trim()||'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80'};
+  if(!v.judul||!v.excerpt) {alert('Judul & excerpt wajib.');return}
+  if(id) await Store.api('/crud.php?table=berita',{method:'PUT',body:JSON.stringify({id,...v})});
+  else await Store.api('/crud.php?table=berita',{method:'POST',body:JSON.stringify(v)});
+  closeModal(); await renderAll();
+}
+function openProgram(id){
+  const it=id? cache.program.find(x=>x.id===id): null;
+  openModal(`
+    <h3>${it?'Edit':'Tambah'} Program</h3>
+    <label class="field">Judul<input id="m_judul" value="${esc(it?.judul||'')}"></label>
+    <label class="field">Icon (fa-xxx)<input id="m_icon" value="${esc(it?.icon||'fa-book-quran')}"></label>
+    <label class="field">Deskripsi<textarea id="m_desc" rows="2">${esc(it?.desc||'')}</textarea></label>
+    <label class="field"><input type="checkbox" id="m_feat" ${it?.feat?'checked':''}> Featured</label>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="saveProgram('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
+  `);
+}
+async function saveProgram(id){
+  const v={judul:m_judul.value.trim(),icon:m_icon.value.trim().replace('fa-solid ',''),desc:m_desc.value.trim(),feat:m_feat.checked?'featured':''};
+  if(!v.judul) {alert('Judul wajib.');return}
+  if(id) await Store.api('/crud.php?table=program',{method:'PUT',body:JSON.stringify({id,...v})});
+  else await Store.api('/crud.php?table=program',{method:'POST',body:JSON.stringify(v)});
+  closeModal(); await renderAll();
+}
+function openFasilitas(id){
+  const it=id? cache.fasilitas.find(x=>x.id===id): null;
+  openModal(`
+    <h3>${it?'Edit':'Tambah'} Fasilitas</h3>
+    <label class="field">Judul<input id="m_judul" value="${esc(it?.judul||'')}"></label>
+    <label class="field">Deskripsi<textarea id="m_desc" rows="2">${esc(it?.desc||'')}</textarea></label>
+    <label class="field">Gambar URL<input id="m_img" value="${esc(it?.img||'')}"></label>
+    <div class="form-row"><label class="field">Icon fa-xxx<input id="m_icon" value="${esc(it?.icon||'fa-building')}"></label><label class="field">Wide? (wide)<input id="m_wide" value="${esc(it?.wide||'')}"></label></div>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="saveFasilitas('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
+  `);
+}
+async function saveFasilitas(id){
+  const v={judul:m_judul.value.trim(),desc:m_desc.value.trim(),img:m_img.value.trim()||'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80',icon:m_icon.value.trim(),wide:m_wide.value.trim()};
+  if(!v.judul) {alert('Judul wajib');return}
+  if(id) await Store.api('/crud.php?table=fasilitas',{method:'PUT',body:JSON.stringify({id,...v})});
+  else await Store.api('/crud.php?table=fasilitas',{method:'POST',body:JSON.stringify(v)});
+  closeModal(); await renderAll();
+}
+function openEkskul(id){
+  const it=id? cache.ekskul.find(x=>x.id===id): null;
+  openModal(`
+    <h3>${it?'Edit':'Tambah'} Ekskul</h3>
+    <label class="field">Judul<input id="m_judul" value="${esc(it?.judul||'')}"></label>
+    <label class="field">Deskripsi<textarea id="m_desc" rows="2">${esc(it?.desc||'')}</textarea></label>
+    <div class="form-row"><label class="field">Icon fa-xxx<input id="m_icon" value="${esc(it?.icon||'fa-star')}"></label><label class="field">Warna<input id="m_color" type="color" value="${esc(it?.color||'#0F5132')}"></label></div>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="saveEkskul('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
+  `);
+}
+async function saveEkskul(id){
+  const v={judul:m_judul.value.trim(),desc:m_desc.value.trim(),icon:m_icon.value.trim(),color:m_color.value};
+  if(!v.judul) {alert('Judul wajib');return}
+  if(id) await Store.api('/crud.php?table=ekskul',{method:'PUT',body:JSON.stringify({id,...v})});
+  else await Store.api('/crud.php?table=ekskul',{method:'POST',body:JSON.stringify(v)});
+  closeModal(); await renderAll();
+}
+function openPrestasi(id){
+  const it=id? cache.prestasi.find(x=>x.id===id): null;
+  openModal(`
+    <h3>${it?'Edit':'Tambah'} Prestasi</h3>
+    <label class="field">Judul<input id="m_judul" value="${esc(it?.judul||'')}"></label>
+    <div class="form-row"><label class="field">Level<input id="m_level" value="${esc(it?.level||'')}"></label><label class="field">Lokasi<input id="m_lok" value="${esc(it?.lokasi||'')}"></label></div>
+    <div class="form-row"><label class="field">Kategori<select id="m_kat"><option value="akademik" ${it?.kat==='akademik'?'selected':''}>akademik</option><option value="seni" ${it?.kat==='seni'?'selected':''}>seni</option><option value="olahraga" ${it?.kat==='olahraga'?'selected':''}>olahraga</option></select></label><label class="field">Gambar URL<input id="m_img" value="${esc(it?.img||'')}"></label></div>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="savePrestasi('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
+  `);
+}
+async function savePrestasi(id){
+  const v={judul:m_judul.value.trim(),level:m_level.value.trim(),lokasi:m_lok.value.trim(),kat:m_kat.value,img:m_img.value.trim()||'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=600&q=80'};
+  if(!v.judul) {alert('Judul wajib');return}
+  if(id) await Store.api('/crud.php?table=prestasi',{method:'PUT',body:JSON.stringify({id,...v})});
+  else await Store.api('/crud.php?table=prestasi',{method:'POST',body:JSON.stringify(v)});
+  closeModal(); await renderAll();
+}
+function openTesti(id){
+  const it=id? cache.testimoni.find(x=>x.id===id): null;
+  openModal(`
+    <h3>${it?'Edit':'Tambah'} Testimoni</h3>
+    <label class="field">Nama<input id="m_nama" value="${esc(it?.nama||'')}"></label>
+    <label class="field">Peran<input id="m_peran" value="${esc(it?.peran||'')}"></label>
+    <label class="field">Foto URL<input id="m_foto" value="${esc(it?.foto||'https://i.pravatar.cc/120?img=5')}"></label>
+    <label class="field">Teks<textarea id="m_teks" rows="3">${esc(it?.teks||'')}</textarea></label>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="saveTesti('${id||''}')"><i class="fa-solid fa-floppy-disk"></i> Simpan</button><button class="btn btn-ghost" onclick="closeModal()">Batal</button></div>
+  `);
+}
+async function saveTesti(id){
+  const v={nama:m_nama.value.trim(),peran:m_peran.value.trim(),foto:m_foto.value.trim(),teks:m_teks.value.trim()};
+  if(!v.nama||!v.teks) {alert('Nama & teks wajib');return}
+  if(id) await Store.api('/crud.php?table=testimoni',{method:'PUT',body:JSON.stringify({id,...v})});
+  else await Store.api('/crud.php?table=testimoni',{method:'POST',body:JSON.stringify(v)});
+  closeModal(); await renderAll();
+}
+async function addUser(){
+  const u=u_user.value.trim(), n=u_nama.value.trim(), p=u_pass.value, r=u_role.value;
+  if(!u||!p||p.length<6){userMsg.textContent='Username & password min 6 char wajib.'; userMsg.className='err'; return}
+  try{
+    await Store.api('/users.php',{method:'POST',body:JSON.stringify({username:u,nama:n||u,password:p,role:r})});
+    userMsg.textContent='✓ User dibuat.'; userMsg.className='ok';
+    u_user.value=''; u_pass.value=''; u_nama.value=''; await renderAll();
+  }catch(e){ userMsg.textContent=e.message; userMsg.className='err'; }
+}
+async function resetPass(id){
+  const p=prompt('Password baru (min 6 char):'); if(!p||p.length<6) return;
+  await Store.api('/users.php',{method:'PUT',body:JSON.stringify({id,password:p})}); alert('Password direset.'); await renderAll();
+}
+async function delUser(id){
+  if(!confirm('Hapus user ini?'))return;
+  try{ await Store.api('/users.php?id='+encodeURIComponent(id),{method:'DELETE'}); await renderAll(); }catch(e){ alert(e.message); }
+}
+init();
+</script>
+</body>
+</html>

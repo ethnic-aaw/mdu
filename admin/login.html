@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login Admin — MDU Al-Ittihad</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+<div class="login-wrap">
+  <form id="loginForm" class="login-card">
+    <h1><span><i class="fa-solid fa-mosque"></i></span> MDU Admin</h1>
+    <small>Al-Ittihad Sumberjaya Majalengka</small>
+    <label class="field">Username<input name="username" required placeholder="admin" value="admin" autocomplete="username"></label>
+    <label class="field">Password<input name="password" type="password" required placeholder="••••••••" value="admin123" autocomplete="current-password"></label>
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px"><i class="fa-solid fa-right-to-bracket"></i> Masuk</button>
+    <p id="msg" class="err"></p>
+    <p class="muted" style="margin-top:10px">Default: <b>admin</b> / <b>admin123</b> — ganti di menu Users setelah login.</p>
+    <p class="muted"><a href="../index.html"><i class="fa-solid fa-arrow-left"></i> Kembali ke website</a></p>
+  </form>
+</div>
+<script src="../js/store.js"></script>
+<script>
+const f=document.getElementById('loginForm'),msg=document.getElementById('msg');
+f.addEventListener('submit',async e=>{
+  e.preventDefault();
+  msg.textContent='Memeriksa...';
+  try{
+    await Store.login(f.username.value.trim(), f.password.value);
+    location.href='index.html';
+  }catch(err){
+    msg.textContent=err.message || 'Username / password salah.';
+  }
+});
+</script>
+</body>
+</html>
