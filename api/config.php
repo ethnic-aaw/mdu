@@ -102,7 +102,7 @@ function initDB(){
       'visi'=>'Terwujudnya madrasah diniyah yang unggul dalam prestasi, berkarakter islami, dan berwawasan kebangsaan.',
       'misi'=>['Menyelenggarakan pendidikan Al-Qur\'an, Fiqih, Akidah Akhlak & Bahasa Arab yang komprehensif.','Membina karakter santri berakhlakul karimah dan cinta budaya lokal.','Mengembangkan bakat santri melalui ekstrakurikuler dan pembinaan prestasi.','Membangun kemitraan erat dengan orang tua, masyarakat & instansi.'],
       'sambutan'=>['nama'=>'Ust. H. Ahmad Fauzi, S.Pd.I','jabatan'=>'Kepala MDU Al-Ittihad','foto'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80','judul'=>"Assalamu'alaikum Warahmatullahi Wabarakatuh",'p1'=>"Puji syukur ke hadirat Allah SWT. MDU Al-Ittihad hadir sebagai rumah kedua bagi putra-putri kita — tempat mereka mencintai Al-Qur'an, memahami agama dengan benar, dan tumbuh berkarakter.",'p2'=>"Kami percaya pendidikan diniyah bukan sekadar tambahan, melainkan fondasi. Di era digital ini, kami berkomitmen menjaga tradisi keilmuan pesantren sambil membuka diri pada inovasi pembelajaran.",'p3'=>"Kami mengundang Ayah/Bunda untuk bergabung, melihat langsung suasana belajar, dan menjadi bagian dari keluarga besar Al-Ittihad."],
-      'kontak'=>['alamat'=>'Jl. Pesantren No. 12, Desa Sumberjaya, Kec. Sumberjaya, Kab. Majalengka 45455','tel'=>'0812-3456-7890','email'=>'info@mdu-alittihad.sch.id']
+      'kontak'=>['alamat'=>'Bongas Wetan, Kec. Sumberjaya, Kabupaten Majalengka, Jawa Barat 45455','tel'=>'0812-3456-7890','email'=>'info@mdu-alittihad.sch.id']
     ];
     $pdo->prepare("INSERT INTO site(id,data) VALUES(1,?)")->execute([json_encode($site,JSON_UNESCAPED_UNICODE)]);
   }
@@ -159,5 +159,15 @@ function initDB(){
       }
     }
   }
+  // migrate alamat lama → Bongas Wetan
+  try{
+    $raw=$pdo->query("SELECT data FROM site WHERE id=1")->fetchColumn();
+    $sd=json_decode($raw,true);
+    $old='Jl. Pesantren No. 12'; $newAddr='Bongas Wetan, Kec. Sumberjaya, Kabupaten Majalengka, Jawa Barat 45455';
+    if(isset($sd['kontak']['alamat']) && str_contains($sd['kontak']['alamat'],$old)){
+      $sd['kontak']['alamat']=$newAddr;
+      $pdo->prepare("UPDATE site SET data=? WHERE id=1")->execute([json_encode($sd,JSON_UNESCAPED_UNICODE)]);
+    }
+  }catch(Exception $e){}
 }
 initDB();
