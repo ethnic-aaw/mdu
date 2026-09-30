@@ -6,5 +6,8 @@ RUN apt-get update && apt-get install -y libsqlite3-dev unzip \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY . /var/www/html/
 RUN mkdir -p /var/www/html/data /var/www/html/uploads && chown -R www-data:www-data /var/www/html/data /var/www/html/uploads && chmod -R 775 /var/www/html/data /var/www/html/uploads
+# ponytail: runtime chown fixes Linux named-volume ownership drift (volume init as root)
+RUN printf '#!/bin/sh\nchown -R www-data:www-data /var/www/html/data /var/www/html/uploads 2>/dev/null || true\nchmod -R 775 /var/www/html/data /var/www/html/uploads 2>/dev/null || true\nexec apache2-foreground\n' > /entrypoint.sh && chmod +x /entrypoint.sh
 EXPOSE 80
+ENTRYPOINT ["/entrypoint.sh"]
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD php -r "exit(@file_get_contents('http://localhost/api/data.php')?'0':'1');"

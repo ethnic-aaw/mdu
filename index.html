@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
 
@@ -29,6 +29,7 @@
       <li><a href="#tentang">Tentang</a></li>
       <li><a href="#berita">Berita</a></li>
       <li><a href="#program">Program</a></li>
+      <li><a href="quran.html" class="quran-link">Al&#8209;Qur'an</a></li>
       <li><a href="#fasilitas">Fasilitas</a></li>
       <li><a href="#ekskul">Ekstrakurikuler</a></li>
       <li><a href="#prestasi">Prestasi</a></li>
@@ -44,7 +45,8 @@
 
 <!-- HERO -->
 <section id="hero" class="hero">
-  <div class="hero-bg"></div>
+  <div id="heroSlides" class="hero-slides"></div>
+  <div id="heroDots" class="hero-dots"></div>
   <div class="hero-overlay"></div>
   <div class="container hero-content" data-aos="fade-up">
     <span class="badge"><i class="fa-solid fa-star"></i> Madrasah Diniyah Ula • Terakreditasi</span>
@@ -91,8 +93,30 @@
   </div>
 </section>
 
-<!-- SAMBUTAN -->
-<section id="sambutan" class="section alt">
+<!-- SAMBUTAN MUDIRUL AM / PENGASUH -->
+<section id="sambutan-amm" class="section alt" style="padding-bottom:28px">
+  <div class="container">
+    <div class="sambutan-card" data-aos="zoom-in" style="border-top:4px solid var(--green)">
+      <div class="quote-mark">“</div>
+      <div class="sambutan-grid">
+        <div class="sambutan-photo">
+          <img id="sambutanAmmFoto" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80" alt="Mudirul Am" loading="lazy">
+          <div class="sambutan-name"><b id="sambutanAmmNama">KH. Ahmad Syarif</b><span id="sambutanAmmJabatan">Mudirul Am / Pengasuh Pondok Pesantren</span></div>
+        </div>
+        <div class="sambutan-text" id="sambutanAmmText">
+          <span class="eyebrow">Sambutan Mudirul Am — Pengasuh Pondok Pesantren</span>
+          <h3 id="sambutanAmmJudul">Assalamu'alaikum Warahmatullahi Wabarakatuh</h3>
+          <p id="sambutanAmmP1">Puji syukur ke hadirat Allah SWT. Pesantren kami berdiri sebagai pusat tarbiyah, dakwah, dan khidmah — membina santri berakhlakul karimah, cinta ilmu, dan siap mengabdi untuk umat.</p>
+          <p id="sambutanAmmP2">MDU Al-Ittihad adalah bagian dari keluarga besar pesantren. Semoga menjadi wasilah lahirnya generasi Qur'ani yang unggul, berkarakter, dan bermanfaat bagi agama, nusa, dan bangsa.</p>
+          <p id="sambutanAmmP3">Mari bersama menjaga tradisi pesantren sambil menyongsong masa depan dengan ilmu dan adab.</p>
+          <p class="wassalam"><em>Wassalamu'alaikum Warahmatullahi Wabarakatuh.</em></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- SAMBUTAN MUDIR AL-ITTIHAD -->
+<section id="sambutan" class="section alt" style="padding-top:28px">
   <div class="container">
     <div class="sambutan-card" data-aos="zoom-in">
       <div class="quote-mark">“</div>
@@ -102,7 +126,7 @@
           <div class="sambutan-name"><b>Ust. H. Ahmad Fauzi, S.Pd.I</b><span>Kepala MDU Al-Ittihad</span></div>
         </div>
         <div class="sambutan-text">
-          <span class="eyebrow">Sambutan Kepala Sekolah</span>
+          <span class="eyebrow">Sambutan Mudir Al-Ittihad</span>
           <h3>Assalamu'alaikum Warahmatullahi Wabarakatuh</h3>
           <p>Puji syukur ke hadirat Allah SWT. MDU Al-Ittihad hadir sebagai rumah kedua bagi putra-putri kita — tempat mereka mencintai Al-Qur'an, memahami agama dengan benar, dan tumbuh berkarakter.</p>
           <p>Kami percaya pendidikan diniyah bukan sekadar tambahan, melainkan fondasi. Di era digital ini, kami berkomitmen menjaga tradisi keilmuan pesantren sambil membuka diri pada inovasi pembelajaran.</p>
@@ -111,6 +135,15 @@
         </div>
       </div>
     </div>
+  </div>
+  <!-- Grid Asatidz 4×4 -->
+  <div class="container" style="margin-top:28px">
+    <div class="section-head" data-aos="fade-up" style="margin-bottom:18px">
+      <span class="eyebrow">Dewan Asatidz</span>
+      <h2 style="font-size:clamp(1.25rem,2.2vw,1.6rem)">Para Asatidz & Sambutan</h2>
+      <p>Foto & sambutan per asatidz — dikelola via Admin.</p>
+    </div>
+    <div id="asatidzGrid" class="asatidz-grid"></div>
   </div>
 </section>
 
@@ -295,8 +328,8 @@
 <button id="backToTop" class="back-to-top" aria-label="Kembali ke atas"><i class="fa-solid fa-arrow-up"></i></button>
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<script src="js/store.js"></script>
-<script src="js/back-to-top.js"></script>
-<script src="js/script.js"></script>
+<script src="js/store.js?v=6"></script>
+<script src="js/back-to-top.js?v=2"></script>
+<script src="js/script.js?v=6"></script>
 </body>
 </html>

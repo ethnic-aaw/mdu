@@ -17,7 +17,14 @@ function getPDO(){
   if($pdo) return $pdo;
   $dir=dirname(DB_PATH);
   if(!is_dir($dir)) mkdir($dir,0755,true);
-  $pdo=new PDO('sqlite:'.DB_PATH);
+  // ensure writable on Docker Linux volumes; auto-repair perms without crash
+  if(is_dir($dir) && !is_writable($dir)) @chmod($dir,0775);
+  if(is_file(DB_PATH) && !is_writable(DB_PATH)) @chmod(DB_PATH,0664);
+  try{ $pdo=new PDO('sqlite:'.DB_PATH); }catch(PDOException $e){
+    // retry after chmod — surface clear error if still fails
+    @chmod($dir,0775); @chmod(DB_PATH,0664);
+    throw $e;
+  }
   $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   // WAL for concurrency
   try{ $pdo->exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;'); }catch(Exception $e){}
@@ -64,7 +71,14 @@ function initDB(){
   $pdo->exec("CREATE TABLE IF NOT EXISTS ekskul (id TEXT PRIMARY KEY, judul TEXT, desc TEXT, icon TEXT, color TEXT)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS prestasi (id TEXT PRIMARY KEY, judul TEXT, level TEXT, lokasi TEXT, kat TEXT, img TEXT)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS testimoni (id TEXT PRIMARY KEY, nama TEXT, peran TEXT, foto TEXT, teks TEXT)");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS asatidz (id TEXT PRIMARY KEY, nama TEXT, jabatan TEXT, foto TEXT, sambutan TEXT, urut INTEGER DEFAULT 0)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS inbox (id TEXT PRIMARY KEY, nama TEXT, kontak TEXT, subjek TEXT, pesan TEXT, tgl TEXT, is_read INTEGER DEFAULT 0)");
+  // migrate asatidz.urut if missing (existing DB)
+  try{
+    $cols=$pdo->query("PRAGMA table_info(asatidz)")->fetchAll(PDO::FETCH_ASSOC);
+    $hasUrut=false; foreach($cols as $c){ if($c['name']==='urut') $hasUrut=true; }
+    if(!$hasUrut) $pdo->exec("ALTER TABLE asatidz ADD COLUMN urut INTEGER DEFAULT 0");
+  }catch(Exception $e){}
   // migrate berita.konten if missing (existing DB)
   try{
     $cols=$pdo->query("PRAGMA table_info(berita)")->fetchAll(PDO::FETCH_ASSOC);
@@ -102,7 +116,7 @@ function initDB(){
       'visi'=>'Terwujudnya madrasah diniyah yang unggul dalam prestasi, berkarakter islami, dan berwawasan kebangsaan.',
       'misi'=>['Menyelenggarakan pendidikan Al-Qur\'an, Fiqih, Akidah Akhlak & Bahasa Arab yang komprehensif.','Membina karakter santri berakhlakul karimah dan cinta budaya lokal.','Mengembangkan bakat santri melalui ekstrakurikuler dan pembinaan prestasi.','Membangun kemitraan erat dengan orang tua, masyarakat & instansi.'],
       'sambutan'=>['nama'=>'Ust. H. Ahmad Fauzi, S.Pd.I','jabatan'=>'Kepala MDU Al-Ittihad','foto'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80','judul'=>"Assalamu'alaikum Warahmatullahi Wabarakatuh",'p1'=>"Puji syukur ke hadirat Allah SWT. MDU Al-Ittihad hadir sebagai rumah kedua bagi putra-putri kita — tempat mereka mencintai Al-Qur'an, memahami agama dengan benar, dan tumbuh berkarakter.",'p2'=>"Kami percaya pendidikan diniyah bukan sekadar tambahan, melainkan fondasi. Di era digital ini, kami berkomitmen menjaga tradisi keilmuan pesantren sambil membuka diri pada inovasi pembelajaran.",'p3'=>"Kami mengundang Ayah/Bunda untuk bergabung, melihat langsung suasana belajar, dan menjadi bagian dari keluarga besar Al-Ittihad."],
-      'kontak'=>['alamat'=>'Bongas Wetan, Kec. Sumberjaya, Kabupaten Majalengka, Jawa Barat 45455','tel'=>'0812-3456-7890','email'=>'info@mdu-alittihad.sch.id']
+      'heroSlides'=>['https://images.unsplash.com/photo-1562774053-701939374585?w=1600&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1600&q=80','https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1600&q=80'],'kontak'=>['alamat'=>'Bongas Wetan, Kec. Sumberjaya, Kabupaten Majalengka, Jawa Barat 45455','tel'=>'0812-3456-7890','email'=>'info@mdu-alittihad.sch.id']
     ];
     $pdo->prepare("INSERT INTO site(id,data) VALUES(1,?)")->execute([json_encode($site,JSON_UNESCAPED_UNICODE)]);
   }
@@ -150,6 +164,12 @@ function initDB(){
       ['id'=>'t2','nama'=>'Rizki Maulana','peran'=>'Alumni 2023 • MTsN 1 Majalengka','foto'=>'https://i.pravatar.cc/120?img=8','teks'=>'Di MDU saya belajar marawis dan kaligrafi. Sekarang berani tampil di depan umum. Terima kasih ustadz/ustadzah!'],
       ['id'=>'t3','nama'=>'Bpk. Dedi Hermawan','peran'=>'Wali Santri • 2025','foto'=>'https://i.pravatar.cc/120?img=9','teks'=>'Lingkungannya islami, fasilitas lengkap. Anak jadi lebih disiplin sholat dan cinta Al-Qur\'an.'],
     ],
+    'asatidz'=>[
+      ['id'=>'a1','nama'=>'Ust. Ahmad Fauzi, S.Pd.I','jabatan'=>'Kepala MDU','foto'=>'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80','sambutan'=>'Assalamu\'alaikum, mari bersama mencetak generasi Qur\'ani yang berkarakter.','urut'=>1],
+      ['id'=>'a2','nama'=>'Ust. Syarif Hidayat','jabatan'=>'Wakil Kepala','foto'=>'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80','sambutan'=>'Pendidikan diniyah fondasi akhlak mulia.','urut'=>2],
+      ['id'=>'a3','nama'=>'Ust. Fatimah Zahra','jabatan'=>'Guru Tahfidz','foto'=>'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80','sambutan'=>'Tahfidz menyenangkan untuk santri sejak dini.','urut'=>3],
+      ['id'=>'a4','nama'=>'Ust. Ridwan Kamil','jabatan'=>'Guru Fiqih','foto'=>'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80','sambutan'=>'Fiqih praktis membekali ibadah sehari-hari.','urut'=>4],
+    ],
   ];
   foreach($seeds as $table=>$rows){
     if($pdo->query("SELECT COUNT(*) FROM $table")->fetchColumn()==0){
@@ -167,6 +187,14 @@ function initDB(){
     if(isset($sd['kontak']['alamat']) && str_contains($sd['kontak']['alamat'],$old)){
       $sd['kontak']['alamat']=$newAddr;
       $pdo->prepare("UPDATE site SET data=? WHERE id=1")->execute([json_encode($sd,JSON_UNESCAPED_UNICODE)]);
+    }
+  }catch(Exception $e){}
+  try{
+    $raw2=$pdo->query("SELECT data FROM site WHERE id=1")->fetchColumn();
+    $sd2=json_decode($raw2,true);
+    if(!isset($sd2['heroSlides']) || !is_array($sd2['heroSlides'])){
+      $sd2['heroSlides']=['https://images.unsplash.com/photo-1562774053-701939374585?w=1600&q=80','https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1600&q=80'];
+      $pdo->prepare("UPDATE site SET data=? WHERE id=1")->execute([json_encode($sd2,JSON_UNESCAPED_UNICODE)]);
     }
   }catch(Exception $e){}
 }

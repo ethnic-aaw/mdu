@@ -7,6 +7,7 @@ $allowed = [
   'ekskul'    => ['judul','desc','icon','color'],
   'prestasi'  => ['judul','level','lokasi','kat','img'],
   'testimoni' => ['nama','peran','foto','teks'],
+  'asatidz'   => ['nama','jabatan','foto','sambutan','urut'],
 ];
 $table=$_GET['table']??'';
 if(!isset($allowed[$table])) json(['error'=>'Invalid table'],400);
@@ -16,6 +17,7 @@ $colsAllowed=$allowed[$table];
 
 // GET list — public, but safe
 if($method==='GET'){
+  if($table==='asatidz'){ $rows=$pdo->query("SELECT * FROM $table ORDER BY COALESCE(urut,9999) ASC, rowid DESC")->fetchAll(PDO::FETCH_ASSOC); json($rows); }
   $rows=$pdo->query("SELECT * FROM $table ORDER BY rowid DESC")->fetchAll(PDO::FETCH_ASSOC);
   json($rows);
 }
@@ -34,7 +36,7 @@ if($method==='POST'){
   $hasRequired = isset($b['judul']) || isset($b['nama']);
   if(!$hasRequired && empty($filtered)) json(['error'=>'Judul/Nama wajib'],422);
   // validate required field present
-  $need = in_array($table,['testimoni']) ? 'nama' : 'judul';
+  $need = in_array($table,['testimoni','asatidz']) ? 'nama' : 'judul';
   if(empty(trim($filtered[$need]??''))) json(['error'=>"$need wajib"],422);
   // berita: tag allowlist + auto tagClass
   if($table==='berita'){

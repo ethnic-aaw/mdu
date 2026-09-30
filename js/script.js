@@ -1,5 +1,5 @@
 // ponytail: vanilla JS only; add framework when CMS/backend needed
-AOS.init({duration:700,once:false,mirror:true,offset:80});
+try{ AOS.init({duration:700,once:false,mirror:true,offset:80}); }catch(e){}
 
 // Navbar: hamburger + scrollspy
 const navLinks=document.getElementById('navLinks'), hamburger=document.getElementById('hamburger');
@@ -11,13 +11,33 @@ addEventListener('scroll',spy,{passive:true}); spy();
 
 // ---- Render from Store (API-backed) ----
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function toSrc(u){ if(!u) return ''; if(u.startsWith('http')||u.startsWith('data:')||u.startsWith('/')) return u; return u; } // uploads/xxx on same host
+function toSrc(u){ if(!u) return ''; if(u.startsWith('http')||u.startsWith('data:')||u.startsWith('/')) return u; if(u.startsWith('uploads/')) return u; return u; }
 function normalizeStats(stats){
   if(!Array.isArray(stats)) return Store.defaults.site.stats;
   return stats.map(s=> s.v!==undefined ? s : {v:s['v']||s[Object.keys(s)[0]], l:s['l']||s[Object.keys(s)[1]]||''});
 }
 let testiTimer, testiIdx=0; let _beritaCache=(typeof Store!=='undefined'? Store.defaults.berita.slice():[]);
+let heroTimer=null, heroIdx=0;
+function renderHeroSlides(urls){
+  const wrap=document.getElementById('heroSlides'), dotsWrap=document.getElementById('heroDots');
+  if(!wrap) return;
+  clearInterval(heroTimer);
+  const list=(Array.isArray(urls)&&urls.length?urls:Store.defaults.site.heroSlides).filter(Boolean).slice(0,8);
+  wrap.innerHTML=list.map((u,i)=>`<div class="hero-slide${i===0?' active':''}" style="background-image:url('${esc(toSrc(u))}')"></div>`).join('');
+  if(dotsWrap){
+    dotsWrap.innerHTML=list.length>1?list.map((_,i)=>`<button class="hero-dot${i===0?' active':''}" aria-label="Slide ${i+1}"></button>`).join(''):'';
+    dotsWrap.querySelectorAll('.hero-dot').forEach((d,i)=>d.onclick=()=>{heroIdx=i;showHero(i);restartHero()});
+  }
+  const slides=[...wrap.querySelectorAll('.hero-slide')], dots=[...document.querySelectorAll('.hero-dot')];
+  function showHero(i){heroIdx=(i+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle('active',k===heroIdx));dots.forEach((x,k)=>x.classList.toggle('active',k===heroIdx))}
+  function restartHero(){clearInterval(heroTimer);if(slides.length>1)heroTimer=setInterval(()=>showHero(heroIdx+1),4500)}
+  heroIdx=0; showHero(0);
+  if(slides.length>1) heroTimer=setInterval(()=>showHero(heroIdx+1),4500);
+  wrap.onmouseenter=()=>clearInterval(heroTimer);
+  wrap.onmouseleave=restartHero;
+}
 function renderFromData(d){
+  renderHeroSlides(d.site.heroSlides);
   // hero — sanitize: allow only span/br/em in title
   const hTitle=document.querySelector('.hero-content h1'); if(hTitle){
     const tmp=document.createElement('div'); tmp.innerHTML=d.site.heroTitle||'';
@@ -35,12 +55,20 @@ function renderFromData(d){
   const tDesc=document.querySelector('#tentang .grid-2 > div > p'); if(tDesc) tDesc.textContent=d.site.tentangDesc;
   const visiP=document.querySelector('.visi-card p'); if(visiP) visiP.textContent=d.site.visi;
   const misiUl=document.querySelector('.misi-list'); if(misiUl) misiUl.innerHTML=(d.site.misi||[]).map(m=>`<li><i class="fa-solid fa-check"></i> ${esc(m)}</li>`).join('');
-  // sambutan
-  const sImg=document.querySelector('.sambutan-photo img'); if(sImg) sImg.src=toSrc(d.site.sambutan.foto);
-  const sName=document.querySelector('.sambutan-name b'); if(sName) sName.textContent=d.site.sambutan.nama;
-  const sJab=document.querySelector('.sambutan-name span'); if(sJab) sJab.textContent=d.site.sambutan.jabatan;
-  const sJudul=document.querySelector('.sambutan-text h3'); if(sJudul) sJudul.textContent=d.site.sambutan.judul;
-  const sPs=[...document.querySelectorAll('.sambutan-text p')]; if(sPs[0]) sPs[0].textContent=d.site.sambutan.p1; if(sPs[1]) sPs[1].textContent=d.site.sambutan.p2; if(sPs[2]) sPs[2].textContent=d.site.sambutan.p3;
+  // sambutan — Mudirul Am (above) + Mudir
+  const sA=d.site.sambutanAmm||{};
+  const aImg=document.getElementById('sambutanAmmFoto'); if(aImg) aImg.src=toSrc(sA.foto);
+  const aNama=document.getElementById('sambutanAmmNama'); if(aNama) aNama.textContent=sA.nama||'';
+  const aJab=document.getElementById('sambutanAmmJabatan'); if(aJab) aJab.textContent=sA.jabatan||'';
+  const aJudul=document.getElementById('sambutanAmmJudul'); if(aJudul) aJudul.textContent=sA.judul||'';
+  const aP1=document.getElementById('sambutanAmmP1'); if(aP1) aP1.textContent=sA.p1||'';
+  const aP2=document.getElementById('sambutanAmmP2'); if(aP2) aP2.textContent=sA.p2||'';
+  const aP3=document.getElementById('sambutanAmmP3'); if(aP3) aP3.textContent=sA.p3||'';
+  const sImg=document.querySelector('#sambutan .sambutan-photo img'); if(sImg) sImg.src=toSrc(d.site.sambutan.foto);
+  const sName=document.querySelector('#sambutan .sambutan-name b'); if(sName) sName.textContent=d.site.sambutan.nama;
+  const sJab=document.querySelector('#sambutan .sambutan-name span'); if(sJab) sJab.textContent=d.site.sambutan.jabatan;
+  const sJudul=document.querySelector('#sambutan .sambutan-text h3'); if(sJudul) sJudul.textContent=d.site.sambutan.judul;
+  const sPs=[...document.querySelectorAll('#sambutan .sambutan-text p')]; if(sPs[0]) sPs[0].textContent=d.site.sambutan.p1; if(sPs[1]) sPs[1].textContent=d.site.sambutan.p2; if(sPs[2]) sPs[2].textContent=d.site.sambutan.p3;
   // kontak info
   const infoPs=[...document.querySelectorAll('.kontak-info .info-item p')];
   if(infoPs[0]) infoPs[0].textContent=d.site.kontak.alamat;
@@ -75,6 +103,9 @@ function renderFromData(d){
   if(tTrack) tTrack.innerHTML=(d.testimoni||[]).map(t=>`
     <div class="testi-card"><img src="${esc(toSrc(t.foto))}" alt="" onerror="this.style.display='none'"><p>“${esc(t.teks)}”</p><b>${esc(t.nama)}</b><span>${esc(t.peran)}</span></div>`).join('') || '<div class="testi-card"><p>Belum ada testimoni.</p></div>';
   if(tDots) tDots.innerHTML=(d.testimoni||[]).map((_,i)=>`<span class="dot ${i===0?'active':''}"></span>`).join('');
+  const aGrid=document.getElementById('asatidzGrid');
+  if(aGrid) aGrid.innerHTML=(d.asatidz||[]).map(a=>`
+    <div class="asatidz-card" data-aos="fade-up"><img src="${esc(toSrc(a.foto))}" loading="lazy" alt="${esc(a.nama)}" onerror="this.style.display='none'"><div class="asatidz-card-body"><b>${esc(a.nama)}</b><small>${esc(a.jabatan||'')}</small><p>${esc(a.sambutan||'')}</p></div></div>`).join('') || '<p style="color:var(--muted);grid-column:1/-1;text-align:center">Belum ada data asatidz.</p>';
   if(window.AOS) AOS.refresh();
   initSliders();
 }
@@ -128,7 +159,12 @@ function closeBeritaModal(){
 window.openBeritaModal=openBeritaModal; window.closeBeritaModal=closeBeritaModal;
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeBeritaModal(); });
 
+// hero fallback immediate so screenshot never blank even if API hangs
+renderHeroSlides((typeof Store!=='undefined'&&Store.defaults&&Store.defaults.site&&Store.defaults.site.heroSlides)?Store.defaults.site.heroSlides:[]);
 Store.load().then(renderFromData).catch(()=>renderFromData(Store.defaults));
+// auto-refresh berita when tab refocused (fixes stale cache after admin save on Docker)
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) Store.load().then(renderFromData).catch(()=>{}); });
+window.addEventListener('focus',()=> Store.load().then(renderFromData).catch(()=>{}));
 
 // Form -> POST to api/inbox.php (with localStorage fallback when file://)
 const form=document.getElementById('contactForm'), msg=document.getElementById('formMsg');
