@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Al-Qur'an — MDU Al-Ittihad Sumberjaya</title>
+<meta name="description" content="Baca Al-Qur'an digital — 114 surah, arab + terjemahan Indonesia, audio murattal.">
+<meta name="theme-color" content="#0F5132">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand">
+      <span class="brand-icon"><i class="fa-solid fa-mosque"></i></span>
+      <span class="brand-text"><b>MDU AL-ITTIHAD</b><small>Sumberjaya • Majalengka</small></span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html#hero">Beranda</a></li>
+      <li><a href="index.html#tentang">Tentang</a></li>
+      <li><a href="index.html#berita">Berita</a></li>
+      <li><a href="index.html#program">Program</a></li>
+      <li><a href="quran.html" class="active quran-link">Al&#8209;Qur'an</a></li>
+      <li><a href="index.html#fasilitas">Fasilitas</a></li>
+      <li><a href="index.html#ekskul">Ekstrakurikuler</a></li>
+      <li><a href="index.html#prestasi">Prestasi</a></li>
+      <li><a href="index.html#testimoni">Testimoni</a></li>
+      <li><a href="index.html#kontak">Kontak</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="index.html#kontak" class="btn btn-gold">Daftar Sekarang</a>
+      <button id="hamburger" class="hamburger" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    </div>
+  </div>
+</nav>
+
+<section class="quran-hero">
+  <div class="container">
+    <a href="index.html" class="quran-back"><i class="fa-solid fa-arrow-left"></i> Kembali ke Beranda</a>
+    <div class="quran-hero-card">
+      <span class="quran-hero-icon"><i class="fa-solid fa-book-quran"></i></span>
+      <div>
+        <span class="eyebrow">Al-Qur'an Digital</span>
+        <h1>Baca Al-Qur'an</h1>
+        <p>114 surah — teks Arab, terjemahan Indonesia, dan audio murattal per ayat.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section quran-main">
+  <div class="container">
+    <div class="quran-toolbar">
+      <label class="quran-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input id="quranSearch" type="search" placeholder="Cari surah (Al-Fatihah, Yasin...)" aria-label="Cari surah"></label>
+      <label class="quran-qori-wrap"><i class="fa-solid fa-headphones"></i><select id="quranQori" aria-label="Pilih qari"><option value="01">Abdullah Al-Juhany</option><option value="02">Abdul Muhsin Al-Qasim</option><option value="03">Abdurrahman as-Sudais</option><option value="04">Ibrahim Al-Dossari</option><option value="05" selected>Misyari Rasyid Al-Afasi</option></select></label>
+    </div>
+    <div id="quranSurahGrid" class="quran-grid"></div>
+    <div id="quranReader" class="quran-reader hide">
+      <div class="quran-reader-head">
+        <button class="btn btn-ghost btn-sm" onclick="quranBack()"><i class="fa-solid fa-arrow-left"></i> Daftar Surah</button>
+        <h3 id="quranReaderTitle"></h3>
+        <span id="quranReaderMeta" class="muted"></span>
+      </div>
+      <div id="quranBismillah" class="quran-bismillah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+      <div id="quranAyatList" class="quran-ayat-list"></div>
+      <div class="quran-reader-nav"><button class="btn btn-ghost btn-sm" id="quranPrev"><i class="fa-solid fa-chevron-left"></i> Sebelumnya</button><button class="btn btn-primary btn-sm" id="quranNext">Selanjutnya <i class="fa-solid fa-chevron-right"></i></button></div>
+    </div>
+    <small class="muted" style="display:block;text-align:center;margin-top:14px">Sumber: equran.id (Kemenag) • Audio: everyayah.com <span id="quranCacheHint"></span></small>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><a href="index.html" class="brand"><span class="brand-icon"><i class="fa-solid fa-mosque"></i></span><span class="brand-text"><b>MDU AL-ITTIHAD</b><small>Sumberjaya • Majalengka</small></span></a><p class="footer-desc">Unggul dalam Prestasi, Berkarakter dalam Budaya.</p></div>
+    <div><h5>Tautan Cepat</h5><ul class="footer-links"><li><a href="index.html#tentang">Tentang</a></li><li><a href="index.html#program">Program</a></li><li><a href="quran.html">Al-Qur'an</a></li><li><a href="index.html#kontak">Kontak</a></li></ul></div>
+    <div><h5>Kontak</h5><p><a href="mailto:info@mdu-alittihad.sch.id">info@mdu-alittihad.sch.id</a><br><a href="tel:+6281234567890">0812-3456-7890</a></p></div>
+  </div>
+  <div class="footer-bottom">© 2026 MDU Al-Ittihad Sumberjaya Majalengka.</div>
+</footer>
+<button id="backToTop" class="back-to-top" aria-label="Kembali ke atas"><i class="fa-solid fa-arrow-up"></i></button>
+<script src="js/back-to-top.js"></script>
+<script>document.getElementById('hamburger')?.addEventListener('click',()=>document.getElementById('navLinks').classList.toggle('open'));</script>
+<script src="js/quran.js"></script>
+</body>
+</html>

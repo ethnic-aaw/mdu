@@ -1,0 +1,5 @@
+data/mdu.db
+data/.throttle_*
+.git
+.gitignore
+*.md

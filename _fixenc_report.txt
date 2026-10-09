@@ -1,0 +1,3 @@
+quran.html: FIXED
+js/quran.js: FIXED
+css/style.css: FIXED
